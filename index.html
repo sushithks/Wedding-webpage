@@ -45,13 +45,11 @@ nav a:hover { color:var(--gold); }
 .hero { min-height:100vh; position:relative; overflow:hidden; display:flex; align-items:flex-end; }
 .hero-img { position:absolute; inset:0; }
 .hero-img img { width:100%; height:100%; object-fit:cover; object-position:center top; }
-/* Gradient overlay: dark at bottom for text, slight vignette */
 .hero-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(7,28,28,0.95) 0%, rgba(7,28,28,0.5) 40%, rgba(7,28,28,0.15) 70%, transparent 100%); }
 .hero-overlay2 { position:absolute; inset:0; background:radial-gradient(ellipse at center, transparent 40%, rgba(7,28,28,0.5) 100%); }
 
 .hero-content { position:relative; z-index:2; padding:60px 80px; width:100%; }
 .hero-eyebrow { font-size:0.58rem; letter-spacing:0.7em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:block; opacity:0; animation:riseUp 1s 0.5s forwards; }
-/* NAME SWAP section */
 .hero-names { display:flex; align-items:baseline; flex-wrap:wrap; gap:0; opacity:0; animation:riseUp 1.2s 0.8s forwards; }
 .name-swap { position:relative; display:inline-block; cursor:default; }
 .name-swap .name-primary, .name-swap .name-hover {
@@ -59,12 +57,8 @@ nav a:hover { color:var(--gold); }
   font-size:clamp(4.5rem,10vw,9rem); line-height:0.9; color:var(--cream);
   display:block; transition:all 0.4s ease;
 }
-.name-swap .name-hover {
-  display:none;
-}
-.name-swap.swapped .name-primary {
-  color:var(--gold);
-}
+.name-swap .name-hover { display:none; }
+.name-swap.swapped .name-primary { color:var(--gold); }
 .name-swap:hover { cursor:pointer; }
 .hero-and { font-family:'Cormorant Upright',serif; font-size:clamp(2rem,4vw,4rem); font-weight:300; color:var(--gold); padding:0 24px; line-height:0.9; }
 .hero-date { margin-top:28px; font-size:0.75rem; letter-spacing:0.5em; text-transform:uppercase; color:rgba(200,160,96,0.6); opacity:0; animation:riseUp 1s 1.2s forwards; }
@@ -72,8 +66,176 @@ nav a:hover { color:var(--gold); }
 @keyframes riseUp { from{opacity:0;transform:translateY(28px);} to{opacity:1;transform:none;} }
 @keyframes pulse { 0%,100%{opacity:0.25;} 50%{opacity:0.6;} }
 
-/* ═══ GALLERY SECTIONS ═══ */
-/* Full-bleed cinematic shot */
+/* ═══════════════════════════════════════════════════
+   SCROLL-DRIVEN IMAGE SEQUENCE
+   The outer .seq section is tall (400vh). Inside it,
+   .seq-sticky pins to the viewport. As the user scrolls
+   through the 400vh, we map scroll progress 0→1 across
+   the 4 frames and crossfade between them in real time.
+   ═══════════════════════════════════════════════════ */
+.seq {
+  position: relative;
+  height: 400vh;                 /* scroll distance — controls pacing */
+  background: var(--teal-deep);
+}
+.seq-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+.seq-stage {
+  position: absolute;
+  inset: 0;
+  background: var(--night);
+}
+/* Each frame is stacked, all loaded, we just flip opacity */
+.seq-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+}
+.seq-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.seq-frame.active { opacity: 1; }
+/* Gentle vignette to tie into the site aesthetic */
+.seq-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(7,28,28,0.55) 100%),
+    linear-gradient(to top, rgba(7,28,28,0.6) 0%, transparent 25%, transparent 75%, rgba(7,28,28,0.4) 100%);
+}
+
+/* Overlay UI on the pinned stage */
+.seq-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 80px 60px 60px;
+}
+.seq-eyebrow {
+  font-size: 0.55rem;
+  letter-spacing: 0.7em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.seq-eyebrow::before { content:''; width:30px; height:1px; background:var(--gold); }
+
+.seq-caption {
+  position: relative;
+}
+.seq-caption h3 {
+  font-family: 'Cormorant', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 16px;
+  /* text changes smoothly */
+  transition: opacity 0.35s ease;
+}
+.seq-caption p {
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(246, 242, 234, 0.6);
+  transition: opacity 0.35s ease;
+}
+
+/* Frame counter + progress bar (bottom right) */
+.seq-meter {
+  position: absolute;
+  bottom: 60px;
+  right: 60px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+}
+.seq-meter-count {
+  font-size: 0.55rem;
+  letter-spacing: 0.4em;
+  color: rgba(200, 160, 96, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+.seq-meter-count .cur { color: var(--gold); }
+.seq-progress-track {
+  width: 160px;
+  height: 1px;
+  background: rgba(200, 160, 96, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+.seq-progress-bar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 0%;
+  background: var(--gold);
+  /* NO transition — update instantly with scroll */
+}
+
+/* Dot indicators (one per frame) */
+.seq-dots {
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.seq-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(200, 160, 96, 0.4);
+  transform: rotate(45deg);
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+}
+.seq-dot.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: rotate(45deg) scale(1.4);
+}
+
+/* Reduced motion / mobile fallback */
+@media (max-width: 800px) {
+  .seq { height: 300vh; }
+  .seq-ui { padding: 70px 24px 40px; }
+  .seq-meter { bottom: 40px; right: 24px; }
+  .seq-dots { left: 24px; }
+  .seq-progress-track { width: 100px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seq { height: auto; }
+  .seq-sticky { position: relative; height: auto; }
+  .seq-stage { position: relative; height: 70vh; }
+  .seq-frame { opacity: 1; position: relative; }
+  .seq-frame:not(:first-child) { display: none; }
+}
+
+/* ═══ EXISTING GALLERY SECTIONS ═══ */
 .full-shot { position:relative; height:70vh; overflow:hidden; }
 .full-shot img { width:100%; height:100%; object-fit:cover; object-position:right; transition:transform 0.8s ease; }
 .full-shot:hover img { transform:scale(1.03); }
@@ -82,7 +244,6 @@ nav a:hover { color:var(--gold); }
 .full-shot-label h3 { font-family:'Cormorant',serif; font-style:italic; font-size:2.5rem; color:var(--cream); line-height:1; }
 .full-shot-label p { font-size:0.55rem; letter-spacing:0.6em; text-transform:uppercase; color:var(--gold); margin-top:8px; }
 
-/* 2-col split */
 .split { display:grid; grid-template-columns:1fr 1fr; }
 .split-cell { position:relative; overflow:hidden; }
 .split-cell img { width:100%; height:100%; object-fit:cover; transition:transform 0.8s ease; display:block; }
@@ -94,17 +255,6 @@ nav a:hover { color:var(--gold); }
 .split-cap { position:absolute; bottom:24px; left:28px; font-family:'Cormorant',serif; font-style:italic; font-size:1.5rem; color:var(--cream); opacity:0; transform:translateY(10px); transition:all 0.4s; }
 .split-cell:hover .split-cap { opacity:1; transform:none; }
 
-/* 3-col grid */
-.trio { display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px; }
-.trio-cell { position:relative; overflow:hidden; }
-.trio-cell img { width:100%; height:420px; object-fit:cover; transition:transform 0.8s ease; display:block; }
-.trio-cell:hover img { transform:scale(1.05); }
-.trio-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(7,28,28,0.7), transparent 60%); opacity:0; transition:opacity 0.5s; }
-.trio-cell:hover .trio-overlay { opacity:1; }
-.trio-cap { position:absolute; bottom:20px; left:22px; font-family:'Cormorant',serif; font-style:italic; font-size:1.3rem; color:var(--cream); opacity:0; transform:translateY(8px); transition:all 0.4s; }
-.trio-cell:hover .trio-cap { opacity:1; transform:none; }
-
-/* Asymmetric 3-panel */
 .asym { display:grid; grid-template-columns:1.4fr 0.6fr; gap:3px; }
 .asym-right { display:grid; grid-template-rows:1fr 1fr; gap:3px; }
 .asym-main { position:relative; overflow:hidden; }
@@ -114,24 +264,20 @@ nav a:hover { color:var(--gold); }
 .asym-sm img { width:100%; height:308px; object-fit:cover; transition:transform 0.8s ease; display:block; }
 .asym-sm:hover img { transform:scale(1.05); }
 
-/* Section header */
 .section-header { padding:80px 80px 40px; position:relative; z-index:1; }
 .section-tag { font-size:0.55rem; letter-spacing:0.7em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:14px; }
 .section-title { font-family:'Cormorant',serif; font-style:italic; font-weight:300; font-size:clamp(2.5rem,5vw,4.5rem); color:var(--cream); line-height:1.05; }
 
-/* Divider */
 .divider { display:flex; align-items:center; gap:20px; padding:0 80px; margin:40px 0; }
 .divider::before,.divider::after { content:''; flex:1; height:1px; background:linear-gradient(to right,transparent,rgba(200,160,96,0.2),transparent); }
 .divider .diamond { width:6px; height:6px; background:var(--gold-dim); transform:rotate(45deg); flex-shrink:0; }
 
-/* ═══ QUOTE STRIP ═══ */
 .quote-strip { padding:80px; background:var(--teal-dark); text-align:center; position:relative; z-index:1; }
 .quote-strip::before,.quote-strip::after { content:''; position:absolute; left:8%; right:8%; height:1px; background:linear-gradient(to right,transparent,rgba(200,160,96,0.2),transparent); }
 .quote-strip::before{top:0;}.quote-strip::after{bottom:0;}
 .quote-text { font-family:'Cormorant',serif; font-style:italic; font-weight:300; font-size:clamp(1.4rem,3vw,2.2rem); color:rgba(246,242,234,0.55); line-height:1.8; max-width:700px; margin:0 auto 20px; }
 .quote-by { font-size:0.58rem; letter-spacing:0.5em; text-transform:uppercase; color:var(--gold); }
 
-/* ═══ COUNTDOWN ═══ */
 .countdown { padding:100px 80px; text-align:center; background:var(--teal-deep); position:relative; z-index:1; }
 .countdown::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(to right,transparent,rgba(200,160,96,0.15),transparent); }
 .cd-wrap { max-width:860px; margin:50px auto 0; border:1px solid rgba(200,160,96,0.12); padding:50px; position:relative; background:rgba(200,160,96,0.02); }
@@ -147,7 +293,6 @@ nav a:hover { color:var(--gold); }
 .cd-unit:hover .cd-n { color:var(--gold); }
 .cd-l { font-size:0.5rem; letter-spacing:0.6em; text-transform:uppercase; color:var(--gold-dim); margin-top:14px; display:block; }
 
-/* ═══ LOCATION ═══ */
 .location { padding:100px 80px; display:grid; grid-template-columns:1fr 1.1fr; gap:80px; align-items:center; position:relative; z-index:1; }
 .loc-tag { font-size:0.55rem; letter-spacing:0.7em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:14px; }
 .loc-title { font-family:'Cormorant',serif; font-style:italic; font-size:clamp(2.5rem,5vw,4rem); color:var(--cream); margin-bottom:36px; }
@@ -160,7 +305,6 @@ nav a:hover { color:var(--gold); }
 .loc-map iframe { width:100%; height:420px; border:none; display:block; filter:grayscale(1) sepia(0.2) brightness(0.75) hue-rotate(160deg); transition:filter 0.5s; }
 .loc-map:hover iframe { filter:grayscale(0.3) brightness(0.9); }
 
-/* ═══ RSVP ═══ */
 .rsvp { padding:100px 80px; background:var(--teal-dark); text-align:center; position:relative; z-index:1; }
 .rsvp-card { max-width:520px; margin:50px auto 0; border:1px solid rgba(200,160,96,0.15); padding:54px 50px; position:relative; background:rgba(200,160,96,0.02); }
 .rsvp-form { display:flex; flex-direction:column; gap:28px; }
@@ -176,15 +320,12 @@ nav a:hover { color:var(--gold); }
 .btn:hover { color:var(--teal-deep); }
 .btn span { position:relative; z-index:1; }
 
-/* Footer */
 footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(200,160,96,0.08); text-align:center; }
 .footer-names { font-family:'Cormorant',serif; font-style:italic; font-weight:300; font-size:clamp(3rem,7vw,6rem); color:var(--cream); margin-bottom:18px; }
 .footer-date { font-size:0.55rem; letter-spacing:0.7em; text-transform:uppercase; color:var(--gold-dim); }
 
-/* responsive */
 @media(max-width:800px){
   .split{grid-template-columns:1fr;}
-  .trio{grid-template-columns:1fr;}
   .asym{grid-template-columns:1fr;}
   .asym-right{grid-template-columns:1fr 1fr;grid-template-rows:auto;}
   .location{grid-template-columns:1fr;padding:80px 24px;}
@@ -208,17 +349,17 @@ footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(2
 <nav>
     <div class="nav-logo">S ◆ A</div>
     <ul>
-        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#sequence">Journey</a></li>
         <li><a href="#countdown">Countdown</a></li>
         <li><a href="#location">Venue</a></li>
         <li><a href="#rsvp">RSVP</a></li>
     </ul>
 </nav>
 
-<!-- HERO: Festive backdrop couple photo -->
+<!-- HERO -->
 <section class="hero">
     <div class="hero-img">
-        <img src=images/image-1.JPG>
+        <img src="images/image-1.jpg" alt="Sushith & Anupriya">
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-overlay2"></div>
@@ -240,9 +381,51 @@ footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(2
     <div class="hero-scroll">Scroll ↓</div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════
+     SCROLL-DRIVEN IMAGE SEQUENCE
+     ═══════════════════════════════════════════════════ -->
+<section class="seq" id="sequence">
+    <div class="seq-sticky">
+        <div class="seq-stage" id="seqStage">
+            <div class="seq-frame" data-frame="0"><img src="images/image-1.jpg" alt=""></div>
+            <div class="seq-frame" data-frame="1"><img src="images/image-2.jpg" alt=""></div>
+            <div class="seq-frame" data-frame="2"><img src="images/image-3.jpg" alt=""></div>
+            <div class="seq-frame" data-frame="3"><img src="images/image-4.jpg" alt=""></div>
+            <div class="seq-vignette"></div>
+        </div>
+
+        <!-- Dot indicators -->
+        <div class="seq-dots" id="seqDots">
+            <div class="seq-dot" data-dot="0"></div>
+            <div class="seq-dot" data-dot="1"></div>
+            <div class="seq-dot" data-dot="2"></div>
+            <div class="seq-dot" data-dot="3"></div>
+        </div>
+
+        <!-- Overlay UI -->
+        <div class="seq-ui">
+            <div class="seq-eyebrow">A Journey · In Four Moments</div>
+            <div class="seq-caption" id="seqCaption">
+                <h3 id="seqTitle">Where it began</h3>
+                <p id="seqSub">Chapter I · The First Glance</p>
+            </div>
+        </div>
+
+        <!-- Frame meter -->
+        <div class="seq-meter">
+            <div class="seq-meter-count">
+                <span class="cur" id="seqCur">01</span> <span style="opacity:.4">/</span> <span>04</span>
+            </div>
+            <div class="seq-progress-track">
+                <div class="seq-progress-bar" id="seqBar"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- FULL BLEED: Garden night shot -->
 <section class="full-shot" id="gallery">
-    <img src=images/image-2.JPG>
+    <img src="images/image-2.jpg" alt="Our Journey">
     <div class="full-shot-overlay"></div>
     <div class="full-shot-label">
         <h3>Our Journey</h3>
@@ -256,16 +439,14 @@ footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(2
     <h2 class="section-title">Sushith & Anupriya</h2>
 </div>
 
-<!-- SPLIT: Tree tunnel shots -->
+<!-- SPLIT -->
 <div class="split">
     <div class="split-cell tall">
-        <img src=images/image-3.JPG>
+        <img src="images/image-3.jpg" alt="Under the trees">
         <div class="split-overlay"></div>
         <div class="split-cap">Under the trees ·</div>
-
     </div>
 
-    <!-- QUOTE -->
     <div class="divider"><div class="diamond"></div></div>
     <section class="quote-strip">
         <p class="quote-text">"You are my greatest adventure, my deepest peace, and my favorite person to spend forever with."</p>
@@ -273,15 +454,13 @@ footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(2
     </section>
     <div class="divider"><div class="diamond"></div></div>
 
-    <!-- ASYM: City / night shots -->
     <div class="section-header">
         <span class="section-tag">II — Our Story</span>
         <h2 class="section-title">Every Chapter, Together</h2>
     </div>
     <div class="asym">
-
         <div class="asym-sm">
-            <img src= images/image-4.jpg>
+            <img src="images/image-4.jpg" alt="Just us">
             <div class="split-overlay"></div>
             <div class="split-cap">Just us ·</div>
         </div>
@@ -346,13 +525,114 @@ footer { padding:70px 80px; background:var(--night); border-top:1px solid rgba(2
 </footer>
 
 <script>
-// Cursor
+// ══════════════════════════════════════════════════════
+// CURSOR
+// ══════════════════════════════════════════════════════
 const cur=document.getElementById('cur'),curR=document.getElementById('cur-r');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
 (function loop(){rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(loop);})();
 
-// Countdown
+// ══════════════════════════════════════════════════════
+// SCROLL-DRIVEN IMAGE SEQUENCE
+// Map: user's scroll position through the .seq section
+// → progress (0..1) → fractional frame index (0..N-1)
+// → each frame's opacity (linear blend with its neighbor)
+// Runs in requestAnimationFrame, reads scroll once per frame.
+// ══════════════════════════════════════════════════════
+(function initSequence(){
+  const seq        = document.getElementById('sequence');
+  const frames     = document.querySelectorAll('.seq-frame');
+  const dots       = document.querySelectorAll('.seq-dot');
+  const bar        = document.getElementById('seqBar');
+  const curLabel   = document.getElementById('seqCur');
+  const titleEl    = document.getElementById('seqTitle');
+  const subEl      = document.getElementById('seqSub');
+
+  // Captions per frame
+  const captions = [
+    { title: 'Where it began',          sub: 'Chapter I · The First Glance' },
+    { title: 'Through the lantern light', sub: 'Chapter II · Evenings We Remember' },
+    { title: 'Beneath the canopy',       sub: 'Chapter III · Walking the Path Together' },
+    { title: 'And all the ones since',   sub: 'Chapter IV · Every Quiet Moment' }
+  ];
+
+  const N = frames.length;          // 4
+  let lastFrame = -1;               // for caption change detection
+  let ticking = false;
+
+  // Preload frames so swaps are instant even on first pass
+  frames.forEach(f => {
+    const img = f.querySelector('img');
+    if (img && !img.complete) {
+      const pre = new Image();
+      pre.src = img.src;
+    }
+  });
+
+  function update(){
+    ticking = false;
+
+    const rect = seq.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // progress = how far we've scrolled into the pinned range
+    // section height is (400vh), sticky pins for (seq.height - vh)
+    const scrollable = rect.height - vh;
+    // -rect.top == pixels scrolled past section top
+    const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
+    const progress = scrollable > 0 ? scrolled / scrollable : 0;
+
+    // Fractional frame position: 0..(N-1)
+    const pos = progress * (N - 1);
+
+    // For each frame, set opacity based on distance from `pos`.
+    // Adjacent frames blend; others are fully hidden.
+    // This keeps the swap INSTANT with scroll, but not jumpy.
+    for (let i = 0; i < N; i++) {
+      const dist = Math.abs(i - pos);
+      const op = dist >= 1 ? 0 : 1 - dist;
+      frames[i].style.opacity = op;
+    }
+
+    // Progress bar — updates instantly (no CSS transition on it)
+    bar.style.width = (progress * 100).toFixed(2) + '%';
+
+    // Active frame = the nearest one; update dots + caption only when it changes
+    const nearest = Math.round(pos);
+    if (nearest !== lastFrame) {
+      lastFrame = nearest;
+      dots.forEach((d, i) => d.classList.toggle('active', i === nearest));
+      curLabel.textContent = String(nearest + 1).padStart(2, '0');
+      // Soft caption swap
+      const c = captions[nearest];
+      titleEl.style.opacity = '0';
+      subEl.style.opacity = '0';
+      setTimeout(() => {
+        titleEl.textContent = c.title;
+        subEl.textContent = c.sub;
+        titleEl.style.opacity = '1';
+        subEl.style.opacity = '1';
+      }, 180);
+    }
+  }
+
+  function onScroll(){
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  // Initial paint
+  update();
+})();
+
+// ══════════════════════════════════════════════════════
+// COUNTDOWN
+// ══════════════════════════════════════════════════════
 function tick(){
   const d=new Date('2026-08-23T00:00:00')-new Date();
   if(d<=0)return;
@@ -363,17 +643,17 @@ function tick(){
 }
 tick();setInterval(tick,1000);
 
-// Name swap on hover
+// ══════════════════════════════════════════════════════
+// NAME SWAP
+// ══════════════════════════════════════════════════════
 const swapBoxes=document.querySelectorAll('.name-swap');
 function swapNames(){
   if(swapBoxes.length>=2){
     const primary1=swapBoxes[0].querySelector('.name-primary');
     const primary2=swapBoxes[1].querySelector('.name-primary');
-
     let temp=primary1.textContent;
     primary1.textContent=primary2.textContent;
     primary2.textContent=temp;
-
     swapBoxes[0].classList.toggle('swapped');
     swapBoxes[1].classList.toggle('swapped');
   }
@@ -383,7 +663,9 @@ swapBoxes.forEach(box=>{
   box.addEventListener('mouseleave',swapNames);
 });
 
-// Scroll reveals
+// ══════════════════════════════════════════════════════
+// SCROLL REVEALS (existing sections)
+// ══════════════════════════════════════════════════════
 const obs=new IntersectionObserver(entries=>entries.forEach(e=>{
   if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}
 }),{threshold:0.06});
@@ -393,23 +675,22 @@ document.querySelectorAll('.section-header,.split,.trio,.asym,.quote-strip,.coun
   obs.observe(el);
 });
 
-// WhatsApp RSVP Submission
+// ══════════════════════════════════════════════════════
+// WhatsApp RSVP
+// ══════════════════════════════════════════════════════
 document.getElementById('rsvp-btn').addEventListener('click', function(e){
   e.preventDefault();
-
   const name = document.getElementById('rsvp-name').value.trim();
   const email = document.getElementById('rsvp-email').value.trim();
   const attendance = document.getElementById('rsvp-attendance').value;
   const guests = document.getElementById('rsvp-guests').value;
   const diet = document.getElementById('rsvp-diet').value.trim();
 
-  // Validate required fields
   if(!name || !email || !attendance || !guests){
     alert('Please fill in all required fields');
     return;
   }
 
-  // Format message
   const message = `Hello Sushith & Anupriya!
 
 I am confirming my attendance for your wedding on August 23, 2026.
@@ -423,11 +704,8 @@ ${diet ? '• Dietary Requirements: ' + diet : ''}
 
 Looking forward to celebrating with you! 🎉💕`;
 
-  // Encode message for WhatsApp URL
   const encodedMessage = encodeURIComponent(message);
   const whatsappURL = `https://wa.me/918606734680?text=${encodedMessage}`;
-
-  // Open WhatsApp
   window.open(whatsappURL, '_blank');
 });
 </script>
